@@ -1,15 +1,63 @@
+const jwt = require("jsonwebtoken");
 const Users = require("../models/userModel");
+const JWT_SECRETE_KEY = process.env.JWT_SECRETE_KEY;
 
 // register
-exports.register = (req, res) => {
-  const body = req.body;
+exports.register = async (req, res) => {
+  const { name, username, email, password } = req.body;
 
-  console.log(body);
+  const existingUser = await Users.findOne({ email });
 
-  res.status(201).json("Register Working...");
+  try {
+    if (existingUser) {
+      res.status(406).json("User already exist please login.");
+    } else {
+      const newUser = new Users({
+        name,
+        username,
+        email,
+        password,
+      });
+
+      await newUser.save();
+
+      res.status(201).json({
+        _id: newUser._id,
+        name: newUser.name,
+        username: newUser.username,
+        email: newUser.email,
+      });
+    }
+  } catch (error) {
+    console.log("register", error);
+
+    res.status(500).json(error);
+  }
 };
 
 // login
-exports.login = (req, res) => {
-  res.status(200).json("Login working...");
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await Users.findOne({ email });
+
+  try {
+    if (user) {
+      if (user.password === password) {
+        user.password = undefined;
+
+        const token = jwt.sign({ userId: user._id }, JWT_SECRETE_KEY);
+
+        res.status(201).json({ user, token });
+      } else {
+        res.status(401).json("Invalid Credentials.");
+      }
+    } else {
+      res.status(404).json("User not found. please Register.");
+    }
+  } catch (error) {
+    console.log("login", error);
+
+    res.status(500).json(error);
+  }
 };
