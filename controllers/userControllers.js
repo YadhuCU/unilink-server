@@ -4,7 +4,7 @@ const JWT_SECRETE_KEY = process.env.JWT_SECRETE_KEY;
 
 // register
 exports.register = async (req, res) => {
-  const { name, username, email, password } = req.body;
+  const { name, username, email, password, googlePicture } = req.body;
 
   const existingUser = await Users.findOne({ email });
 
@@ -17,16 +17,12 @@ exports.register = async (req, res) => {
         username,
         email,
         password,
+        googlePicture,
       });
 
       await newUser.save();
 
-      res.status(201).json({
-        _id: newUser._id,
-        name: newUser.name,
-        username: newUser.username,
-        email: newUser.email,
-      });
+      res.status(201).json(newUser);
     }
   } catch (error) {
     console.log("register", error);
