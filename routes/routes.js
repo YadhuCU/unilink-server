@@ -8,10 +8,14 @@ const {
 
 const router = express.Router();
 
+// USERS
 // register user
 router.post("/register", userController.register);
 // loginn user.
 router.post("/login", userController.login);
+router.get("/users/:uid", jwtVerification, userController.getUser);
+
+//POSTS
 // add post.
 router.post(
   "/post/create",
@@ -19,5 +23,8 @@ router.post(
   multerPostMiddleware.single("postImage"),
   postController.createPost,
 );
+// get all posts.
+router.get("/posts/all", jwtVerification, postController.getAllPosts);
+router.get("/posts/:id", jwtVerification, postController.getPost);
 
 exports.router = router;

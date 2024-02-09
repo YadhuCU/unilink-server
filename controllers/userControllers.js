@@ -57,3 +57,9 @@ exports.login = async (req, res) => {
     res.status(500).json(error);
   }
 };
+
+exports.getUser = async (req, res) => {
+  const { uid } = req.params;
+  const user = await Users.findOne({ _id: uid });
+  res.status(200).json(user);
+};
