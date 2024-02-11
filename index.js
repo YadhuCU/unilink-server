@@ -15,6 +15,7 @@ app.use((req, res, next) => {
 });
 app.use(router);
 app.use("/post-image", express.static("./uploads/post"));
+app.use("/user-image", express.static("./uploads/user"));
 
 app.get("/", (req, res) => {
   res.status(200).json("Working...");

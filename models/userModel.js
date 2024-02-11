@@ -11,9 +11,18 @@ const userSchema = mongoose.Schema({
   bio: { type: String, maxLength: 200, default: "" },
   dateOfBirth: { type: String, default: "" },
   place: { type: String, default: "" },
-  bookmark: { type: [{ type: mongoose.Schema.Types.ObjectId }], default: [] },
-  followers: { type: [{ type: mongoose.Schema.Types.ObjectId }], default: [] },
-  following: { type: [{ type: mongoose.Schema.Types.ObjectId }], default: [] },
+  bookmark: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Posts" }],
+    default: [],
+  },
+  followers: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
+    default: [],
+  },
+  following: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
+    default: [],
+  },
   joinedDate: { type: Date, default: Date.now },
 });
 

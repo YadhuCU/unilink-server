@@ -5,6 +5,9 @@ const { jwtVerification } = require("../middlewares/jwtVerification");
 const {
   multerPostMiddleware,
 } = require("../middlewares/multerPostMiddleware.js");
+const {
+  multerUserMiddleware,
+} = require("../middlewares/multerUserMiddleware.js");
 
 const router = express.Router();
 
@@ -30,6 +33,21 @@ router.put(
   "/users/follow-unfollow/:followed_uid",
   jwtVerification,
   userController.followUnfollowUser,
+);
+// update the profile.
+router.put(
+  "/users/profile/update/:id",
+  jwtVerification,
+  multerUserMiddleware.fields([
+    { name: "profilePicture", maxCount: 1 },
+    { name: "coverPicture", maxCount: 1 },
+  ]),
+  userController.updateProfile,
+);
+router.get(
+  "/users/bookmark/:id",
+  jwtVerification,
+  userController.getBookmarkedPosts,
 );
 
 //POSTS

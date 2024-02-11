@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const Users = require("../models/userModel");
 const JWT_SECRETE_KEY = process.env.JWT_SECRETE_KEY;
 const { dateFormatter } = require("../utils/dateFormatter");
+const { default: mongoose } = require("mongoose");
 
 // register
 exports.register = async (req, res) => {
@@ -55,7 +56,7 @@ exports.login = async (req, res) => {
           googlePicture: user.googlePicture,
           coverPicture: user.coverPicture,
           bio: user.bio,
-          dateOfBirth: user.dateOfBirth && dateFormatter(user.dateOfBirth),
+          dateOfBirth: user.dateOfBirth,
           place: user.place,
           bookmark: user.bookmark,
           followers: user.followers,
@@ -189,6 +190,184 @@ exports.followUnfollowUser = async (req, res) => {
     }
   } catch (error) {
     console.log("followUnfollowUser", error);
+    res.status(500).json(error);
+  }
+};
+
+// update profile.
+exports.updateProfile = async (req, res) => {
+  const { profilePicture, coverPicture } = req.files || {
+    profilePicture: "",
+    coverPicture: "",
+  };
+  const { id } = req.params;
+
+  const {
+    name,
+    username,
+    email,
+    password,
+    googlePicture,
+    dateOfBirth,
+    place,
+    bookmark,
+    followers,
+    following,
+    joinedDate,
+  } = req.body;
+
+  const pPicture = profilePicture
+    ? profilePicture[0].filename
+    : req.body.profilePicture;
+  const cPicture = coverPicture
+    ? coverPicture[0].filename
+    : req.body.coverPicture;
+
+  try {
+    const updatedUser = await Users.findByIdAndUpdate(
+      { _id: id },
+      {
+        name,
+        username,
+        email,
+        password,
+        profilePicture: pPicture,
+        googlePicture,
+        coverPicture: cPicture,
+        dateOfBirth,
+        place,
+        bookmark,
+        followers,
+        following,
+        joinedDate,
+      },
+      { new: true },
+    );
+    await updatedUser.save();
+    res.status(200).json({
+      ...updatedUser._doc,
+      joinedDate: dateFormatter(updatedUser.joinedDate),
+    });
+  } catch (error) {
+    console.log("udpateProfile", error);
+    res.status(500).json(error);
+  }
+};
+
+// get bookmarked posts.
+exports.getBookmarkedPosts = async (req, res) => {
+  const { id } = req.params;
+  const mongooseId = new mongoose.Types.ObjectId(id);
+
+  console.log("id", id);
+  console.log("mongooseId", mongooseId);
+
+  try {
+    // const user = await Users.findById({ _id: id }).populate("bookmark");
+
+    // const bookmarkedPosts = await Users.aggregate([
+    //   { $match: { _id: id } },
+    //   {
+    //     $lookup: {
+    //       from: "posts",
+    //       localField: "bookmark",
+    //       foreignField: "_id",
+    //       as: "bookmarkedPosts",
+    //     },
+    //   },
+    //   { $unwind: "$bookmarkedPosts" },
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       localField: "bookmarkedPosts.postUser",
+    //       foreignField: "_id",
+    //       as: "user",
+    //     },
+    //   },
+    //   { $unwind: "$user" },
+    //   {
+    //     $project: {
+    //       _id: "$bookmarkedPosts._id",
+    //       postText: "$bookmarkedPosts.postText",
+    //       postImage: "$bookmarkedPosts.postImage",
+    //       postLikes: "$bookmarkedPosts.postLikes",
+    //       postComments: "$bookmarkedPosts.postComments",
+    //       postDate: "$bookmarkedPosts.postDate",
+    //       user: {
+    //         _id: "$user._id",
+    //         username: "$user.username",
+    //         name: "$user.name",
+    //         profilePicture: "$user.profilePicture",
+    //         googlePicture: "$user.googlePicture",
+    //       },
+    //     },
+    //   },
+    // ]);
+    // const bookmarkedPosts = await Users.aggregate([
+    //   { $match: { _id: id } },
+    //   {
+    //     $lookup: {
+    //       from: "posts",
+    //       localField: "bookmark",
+    //       foreignField: "_id",
+    //       as: "bookmarkedPosts",
+    //     },
+    //   },
+    //   { $unwind: "$bookmarkedPosts" },
+    //   {
+    //     $project: {
+    //       _id: "$bookmarkedPosts._id",
+    //       postText: "$bookmarkedPosts.postText",
+    //       postImage: "$bookmarkedPosts.postImage",
+    //       postDate: "$bookmarkedPosts.postDate",
+    //       // Include other necessary fields
+    //     },
+    //   },
+    // ]);
+    const bookmarkedPosts = await Users.aggregate([
+      { $match: { $expr: { $eq: ["$_id", { $toObjectId: id }] } } },
+      {
+        $lookup: {
+          from: "posts",
+          localField: "bookmark",
+          foreignField: "_id",
+          as: "bookmarkedPosts",
+        },
+      },
+      { $unwind: "$bookmarkedPosts" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "bookmarkedPosts.postUser",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          _id: "$bookmarkedPosts._id",
+          postText: "$bookmarkedPosts.postText",
+          postImage: "$bookmarkedPosts.postImage",
+          postLikes: "$bookmarkedPosts.postLikes",
+          postComments: "$bookmarkedPosts.postComments",
+          postDate: "$bookmarkedPosts.postDate",
+          user: {
+            _id: "$user._id",
+            username: "$user.username",
+            name: "$user.name",
+            profilePicture: "$user.profilePicture",
+            googlePicture: "$user.googlePicture",
+          },
+        },
+      },
+    ]);
+
+    console.log("bookmarkedPosts", bookmarkedPosts);
+
+    res.status(200).json(bookmarkedPosts);
+  } catch (error) {
+    console.log("Error", error);
     res.status(500).json(error);
   }
 };
