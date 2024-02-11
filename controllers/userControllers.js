@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Users = require("../models/userModel");
 const JWT_SECRETE_KEY = process.env.JWT_SECRETE_KEY;
+const { dateFormatter } = require("../utils/dateFormatter");
 
 // register
 exports.register = async (req, res) => {
@@ -44,7 +45,25 @@ exports.login = async (req, res) => {
 
         const token = jwt.sign({ userId: user._id }, JWT_SECRETE_KEY);
 
-        res.status(201).json({ user, token });
+        const newUser = {
+          _id: user._id,
+          name: user.name,
+          username: user.username,
+          email: user.email,
+          password: user.password,
+          profilePicture: user.profilePicture,
+          googlePicture: user.googlePicture,
+          coverPicture: user.coverPicture,
+          bio: user.bio,
+          dateOfBirth: user.dateOfBirth && dateFormatter(user.dateOfBirth),
+          place: user.place,
+          bookmark: user.bookmark,
+          followers: user.followers,
+          following: user.following,
+          joinedDate: dateFormatter(user.joinedDate),
+        };
+
+        res.status(201).json({ user: newUser, token });
       } else {
         res.status(401).json("Invalid Credentials.");
       }
@@ -58,8 +77,118 @@ exports.login = async (req, res) => {
   }
 };
 
+// get user
 exports.getUser = async (req, res) => {
   const { uid } = req.params;
-  const user = await Users.findOne({ _id: uid });
-  res.status(200).json(user);
+
+  try {
+    const user = await Users.findOne({ _id: uid });
+    res.status(200).json(user);
+  } catch (error) {
+    console.log("getUser", error);
+    res.status(500).json(error);
+  }
+};
+
+// get all user
+exports.getAllUser = async (req, res) => {
+  try {
+    const user = await Users.find();
+    res.status(200).json(user);
+  } catch (error) {
+    console.log("getAllUser", error);
+    res.status(500).json(error);
+  }
+};
+
+// get random user
+exports.getRandomUser = async (req, res) => {
+  try {
+    const randomUsers = await Users.find().limit(4);
+    res.status(200).json(randomUsers);
+  } catch (error) {
+    console.log("getRandomUser", error);
+    res.status(500).json(error);
+  }
+};
+
+// add post to bookmark.
+exports.toggleBookmark = async (req, res) => {
+  const { userId } = req.payload;
+  const { postId } = req.body;
+
+  try {
+    const user = await Users.findOne({ _id: userId });
+
+    if (user) {
+      const isBookmarked = user.bookmark.includes(postId);
+
+      if (isBookmarked) {
+        user.bookmark = user.bookmark.filter((item) => String(item) !== postId);
+      } else {
+        user.bookmark.push(postId);
+      }
+
+      user.markModified("bookmark");
+      await user.save();
+
+      res.status(200).json(user);
+    } else {
+      res.status(404).json("Unauthorized Entry.");
+    }
+  } catch (error) {
+    console.log("toggleBookmark", error);
+    res.status(500).json(error);
+  }
+};
+
+// follow and unfollow.
+exports.followUnfollowUser = async (req, res) => {
+  const { userId } = req.payload;
+  const { followed_uid } = req.params;
+  console.log("userId", userId);
+  console.log("followed_uid", followed_uid);
+
+  // cUser - following++ > fUser - folllower++
+  try {
+    const currentUser = await Users.findOne({ _id: userId });
+    const followedUser = await Users.findOne({ _id: followed_uid });
+    console.log("currentUser", currentUser);
+    console.log("followedUser", followedUser);
+
+    const isFollowing = currentUser.following.includes(followed_uid);
+    console.log("isFollowing", isFollowing);
+
+    if (!currentUser || !followedUser)
+      return res.status(404).json({ message: "User not found." });
+
+    if (isFollowing) {
+      // unfollow.
+      // - remove fid from [following] of currentUser.
+      // - remove cid from [followers] of followedUser.
+
+      await Users.updateOne(
+        { _id: userId },
+        { $pull: { following: followed_uid } },
+      );
+      await Users.updateOne(
+        { _id: followed_uid },
+        { $pull: { followers: userId } },
+      );
+      res.status(200).json({ message: "Following...." });
+    } else {
+      // follow
+      // - add fid from [following] of currentUser.
+      // - add cid from [followers] of followedUser.
+      currentUser.following.push(followed_uid);
+      followedUser.followers.push(userId);
+
+      await currentUser.save();
+      await followedUser.save();
+      res.status(200).json({ message: "Unfollowed...." });
+    }
+  } catch (error) {
+    console.log("followUnfollowUser", error);
+    res.status(500).json(error);
+  }
 };

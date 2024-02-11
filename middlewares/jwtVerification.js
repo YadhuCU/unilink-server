@@ -7,7 +7,6 @@ exports.jwtVerification = (req, res, next) => {
     try {
       const { userId } = jwt.verify(token, JWT_SECRETE_KEY);
       req.payload = { userId };
-      console.log("req.payload", req.payload);
       next();
     } catch (error) {
       console.log(error);

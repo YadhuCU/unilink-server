@@ -33,6 +33,7 @@ exports.getAllPosts = async (req, res) => {
   }
 };
 
+// get post
 exports.getPost = async (req, res) => {
   const { id } = req.params;
   try {

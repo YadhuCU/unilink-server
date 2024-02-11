@@ -13,7 +13,24 @@ const router = express.Router();
 router.post("/register", userController.register);
 // loginn user.
 router.post("/login", userController.login);
-router.get("/users/:uid", jwtVerification, userController.getUser);
+// get user
+router.get("/user/:uid", jwtVerification, userController.getUser);
+// add or remove bookmark.
+router.patch(
+  "/user/bookmark/toggle",
+  jwtVerification,
+  userController.toggleBookmark,
+);
+// get random users
+router.get("/users/random", jwtVerification, userController.getRandomUser);
+// get all users
+router.get("/users/all", jwtVerification, userController.getAllUser);
+// followUnfollow User.
+router.put(
+  "/users/follow-unfollow/:followed_uid",
+  jwtVerification,
+  userController.followUnfollowUser,
+);
 
 //POSTS
 // add post.

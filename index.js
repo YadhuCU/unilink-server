@@ -9,6 +9,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 app.use(router);
 app.use("/post-image", express.static("./uploads/post"));
 
