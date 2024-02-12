@@ -8,6 +8,7 @@ const {
 const {
   multerUserMiddleware,
 } = require("../middlewares/multerUserMiddleware.js");
+const Users = require("../models/userModel.js");
 
 const router = express.Router();
 
@@ -48,6 +49,11 @@ router.get(
   "/users/bookmark/:id",
   jwtVerification,
   userController.getBookmarkedPosts,
+);
+router.get(
+  "/posts/following/post",
+  jwtVerification,
+  userController.getFollowingUsersPosts,
 );
 
 //POSTS
