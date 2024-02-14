@@ -383,7 +383,6 @@ exports.getFollowingUsersPosts = async (req, res) => {
 };
 
 // get users post.
-// completed.
 exports.getUserPosts = async (req, res) => {
   const { userId } = req.params;
   const id = new mongoose.Types.ObjectId(userId);
@@ -422,6 +421,55 @@ exports.getUserPosts = async (req, res) => {
 
     console.log("UserPost", userPost);
     res.status(200).json(userPost);
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json(error);
+  }
+};
+
+// get user replied posts.
+exports.getUserRepliedPosts = async (req, res) => {
+  const { userId } = req.params;
+  const id = new mongoose.Types.ObjectId(userId);
+  try {
+    const userRepliedPosts = await Posts.aggregate([
+      {
+        $match: {
+          "postComments.commentAuthor": id,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "postUser",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $project: {
+          _id: 1,
+          postText: 1,
+          postImage: 1,
+          postLikes: 1,
+          postComments: 1,
+          postDate: 1,
+          user: {
+            _id: "$user._id",
+            username: "$user.username",
+            name: "$user.name",
+            profilePicture: "$user.profilePicture",
+            googlePicture: "$user.googlePicture",
+          },
+        },
+      },
+    ]);
+
+    console.log("userRepliedPosts", userRepliedPosts);
+    res.status(200).json(userRepliedPosts);
   } catch (error) {
     console.log("error", error);
     res.status(500).json(error);

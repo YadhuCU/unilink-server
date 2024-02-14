@@ -8,8 +8,12 @@ const postSchema = mongoose.Schema({
     type: [
       {
         commentText: { type: String },
-        commentAuthor: { type: mongoose.Schema.Types.ObjectId, required: true },
-        commentLikes: { type: [mongoose.Schema.Types.ObjectId] },
+        commentAuthor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Users",
+          required: true,
+        },
+        commentLikes: { type: [mongoose.Schema.Types.ObjectId], ref: "Users" },
         commentAuthorName: { type: String, default: "" },
         commentAuthorUsername: { type: String, default: "" },
         commentAuthorProfilePicture: { type: String, default: "" },

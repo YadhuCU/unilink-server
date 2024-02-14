@@ -55,7 +55,12 @@ router.get(
   jwtVerification,
   userController.getFollowingUsersPosts,
 );
-router.get("/posts/user/:userId", userController.getUserPosts);
+router.get("/posts/user/:userId", jwtVerification, userController.getUserPosts);
+router.get(
+  "/posts/user/replied/:userId",
+  jwtVerification,
+  userController.getUserRepliedPosts,
+);
 
 //POSTS
 // add post.
