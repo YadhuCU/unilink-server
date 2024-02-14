@@ -105,3 +105,38 @@ exports.getPost = async (req, res) => {
     res.status(404).json(error);
   }
 };
+
+// add comment to post.
+exports.addCommentToPost = async (req, res) => {
+  const { userId } = req.payload;
+  const { postId } = req.params;
+  const { commentText } = req.body;
+
+  try {
+    const post = await Posts.findOne({ _id: postId });
+
+    const user = await Users.findOne({ _id: userId });
+
+    console.log("user", user);
+
+    const comment = {
+      commentText,
+      commentAuthor: userId,
+      commentAuthorName: user?.name,
+      commentAuthorUsername: user?.username,
+      commentAuthorProfilePicture: user?.profilePicture,
+      commentAuthorGooglePicture: user?.googlePicture,
+    };
+
+    console.log("comment", comment);
+
+    post.postComments.push(comment);
+
+    await post.save();
+
+    res.status(201).json(post);
+  } catch (error) {
+    console.log(error);
+    res.status(404).json(error);
+  }
+};

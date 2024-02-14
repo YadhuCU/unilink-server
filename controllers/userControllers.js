@@ -2,8 +2,8 @@ const jwt = require("jsonwebtoken");
 const Users = require("../models/userModel");
 const JWT_SECRETE_KEY = process.env.JWT_SECRETE_KEY;
 const { dateFormatter } = require("../utils/dateFormatter");
-const { default: mongoose } = require("mongoose");
 const Posts = require("../models/postModel");
+const mongoose = require("mongoose");
 
 // register
 exports.register = async (req, res) => {
@@ -87,7 +87,7 @@ exports.getUser = async (req, res) => {
     const user = await Users.findOne({ _id: uid });
     res
       .status(200)
-      .json({ ...user, joinedDate: dateFormatter(user.joinedDate) });
+      .json({ ...user._doc, joinedDate: dateFormatter(user.joinedDate) });
   } catch (error) {
     console.log("getUser", error);
     res.status(500).json(error);
@@ -331,16 +331,12 @@ exports.getFollowingUsersPosts = async (req, res) => {
 
   try {
     const id = new mongoose.Types.ObjectId(userId);
-    // console.log("id", id)
 
     const user = await Users.findById(userId);
     console.log("user", user);
     const followingArray = user.following;
     console.log("followingArray", followingArray);
 
-    // const posts = await Posts.find({
-    //   $or: [{ postUser: userId }, { postUser: { $in: followingArray } }],
-    // });
     const posts = await Posts.aggregate([
       {
         $match: {
@@ -382,6 +378,52 @@ exports.getFollowingUsersPosts = async (req, res) => {
     res.status(200).json(posts);
   } catch (error) {
     console.log("error getFollowingUsersPosts", error);
+    res.status(500).json(error);
+  }
+};
+
+// get users post.
+// completed.
+exports.getUserPosts = async (req, res) => {
+  const { userId } = req.params;
+  const id = new mongoose.Types.ObjectId(userId);
+  try {
+    const userPost = await Posts.aggregate([
+      { $match: { postUser: id } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "postUser",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $project: {
+          _id: 1,
+          postText: 1,
+          postImage: 1,
+          postLikes: 1,
+          postComments: 1,
+          postDate: 1,
+          user: {
+            _id: "$user._id",
+            username: "$user.username",
+            name: "$user.name",
+            profilePicture: "$user.profilePicture",
+            googlePicture: "$user.googlePicture",
+          },
+        },
+      },
+    ]);
+
+    console.log("UserPost", userPost);
+    res.status(200).json(userPost);
+  } catch (error) {
+    console.log("error", error);
     res.status(500).json(error);
   }
 };

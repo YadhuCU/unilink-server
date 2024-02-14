@@ -55,6 +55,7 @@ router.get(
   jwtVerification,
   userController.getFollowingUsersPosts,
 );
+router.get("/posts/user/:userId", userController.getUserPosts);
 
 //POSTS
 // add post.
@@ -66,6 +67,13 @@ router.post(
 );
 // get all posts.
 router.get("/posts/all", jwtVerification, postController.getAllPosts);
+// get Single post
 router.get("/posts/:id", jwtVerification, postController.getPost);
+// add comment to post
+router.post(
+  "/posts/comment/:postId",
+  jwtVerification,
+  postController.addCommentToPost,
+);
 
 exports.router = router;
