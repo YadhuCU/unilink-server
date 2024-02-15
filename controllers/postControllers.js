@@ -140,3 +140,35 @@ exports.addCommentToPost = async (req, res) => {
     res.status(404).json(error);
   }
 };
+
+// like and unlike the post
+exports.likeOrUnlikePost = async (req, res) => {
+  const { userId } = req.payload;
+  const { postId } = req.params;
+
+  console.log("userId", userId);
+  console.log("postId", postId);
+
+  try {
+    const post = await Posts.findOne({ _id: postId });
+    console.log("post", post);
+    if (post.postLikes.includes(userId)) {
+      // remove the id from the array.
+      const newPostLikeArray = post.postLikes.filter(
+        (item) => String(item) !== userId,
+      );
+      post.postLikes = newPostLikeArray;
+    } else {
+      // add the id to array.
+      post.postLikes.push(userId);
+    }
+
+    await post.save();
+
+    console.log("post", post);
+    res.status(201).json(post);
+  } catch (error) {
+    console.log(error);
+    res.status(404).json(error);
+  }
+};

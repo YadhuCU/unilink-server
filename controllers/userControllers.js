@@ -467,9 +467,53 @@ exports.getUserRepliedPosts = async (req, res) => {
         },
       },
     ]);
-
-    console.log("userRepliedPosts", userRepliedPosts);
     res.status(200).json(userRepliedPosts);
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json(error);
+  }
+};
+
+exports.getUserLikedPost = async (req, res) => {
+  const { userId } = req.params;
+  const id = new mongoose.Types.ObjectId(userId);
+  try {
+    const userLikedPosts = await Posts.aggregate([
+      {
+        $match: {
+          postLikes: id,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "postUser",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $project: {
+          _id: 1,
+          postText: 1,
+          postImage: 1,
+          postLikes: 1,
+          postComments: 1,
+          postDate: 1,
+          user: {
+            _id: "$user._id",
+            username: "$user.username",
+            name: "$user.name",
+            profilePicture: "$user.profilePicture",
+            googlePicture: "$user.googlePicture",
+          },
+        },
+      },
+    ]);
+    res.status(200).json(userLikedPosts);
   } catch (error) {
     console.log("error", error);
     res.status(500).json(error);

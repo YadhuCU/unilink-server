@@ -61,6 +61,11 @@ router.get(
   jwtVerification,
   userController.getUserRepliedPosts,
 );
+router.get(
+  "/posts/user/liked/:userId",
+  jwtVerification,
+  userController.getUserLikedPost,
+);
 
 //POSTS
 // add post.
@@ -79,6 +84,12 @@ router.post(
   "/posts/comment/:postId",
   jwtVerification,
   postController.addCommentToPost,
+);
+// like or unlike post
+router.patch(
+  "/posts/like/:postId",
+  jwtVerification,
+  postController.likeOrUnlikePost,
 );
 
 exports.router = router;
