@@ -8,7 +8,7 @@ const {
 const {
   multerUserMiddleware,
 } = require("../middlewares/multerUserMiddleware.js");
-const Users = require("../models/userModel.js");
+const messageController = require("../controllers/messageControllers");
 
 const router = express.Router();
 
@@ -90,6 +90,20 @@ router.patch(
   "/posts/like/:postId",
   jwtVerification,
   postController.likeOrUnlikePost,
+);
+
+// Message.
+// add message
+router.post("/message/add", jwtVerification, messageController.addMessage);
+router.get(
+  "/message/conversations/all",
+  jwtVerification,
+  messageController.getAllConversations,
+);
+router.get(
+  "/message/users/:otherUserId",
+  jwtVerification,
+  messageController.getUserMessage,
 );
 
 exports.router = router;

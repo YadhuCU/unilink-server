@@ -474,6 +474,7 @@ exports.getUserRepliedPosts = async (req, res) => {
   }
 };
 
+// get user Liked posts.
 exports.getUserLikedPost = async (req, res) => {
   const { userId } = req.params;
   const id = new mongoose.Types.ObjectId(userId);
