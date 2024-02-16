@@ -85,9 +85,13 @@ exports.getUser = async (req, res) => {
 
   try {
     const user = await Users.findOne({ _id: uid });
-    res
-      .status(200)
-      .json({ ...user._doc, joinedDate: dateFormatter(user.joinedDate) });
+    const post = await Posts.find({ postUser: uid });
+
+    res.status(200).json({
+      ...user._doc,
+      joinedDate: dateFormatter(user.joinedDate),
+      post: post.length,
+    });
   } catch (error) {
     console.log("getUser", error);
     res.status(500).json(error);
@@ -165,15 +169,11 @@ exports.toggleBookmark = async (req, res) => {
 exports.followUnfollowUser = async (req, res) => {
   const { userId } = req.payload;
   const { followed_uid } = req.params;
-  console.log("userId", userId);
-  console.log("followed_uid", followed_uid);
 
   // cUser - following++ > fUser - folllower++
   try {
     const currentUser = await Users.findOne({ _id: userId });
     const followedUser = await Users.findOne({ _id: followed_uid });
-    console.log("currentUser", currentUser);
-    console.log("followedUser", followedUser);
 
     const isFollowing = currentUser.following.includes(followed_uid);
     console.log("isFollowing", isFollowing);
