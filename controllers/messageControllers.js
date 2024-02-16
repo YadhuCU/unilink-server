@@ -1,5 +1,7 @@
 const Messages = require("../models/messageModel");
 const Conversations = require("../models/conversationModel");
+const { io } = require("../socket/socket");
+const { getRecieverSocketId } = require("../socket/socket");
 
 // send message.
 exports.addMessage = async (req, res) => {
@@ -39,6 +41,12 @@ exports.addMessage = async (req, res) => {
       }),
     ]);
 
+    const receiverSocketId = getRecieverSocketId(receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("add-message", newMessage);
+    }
+
     res.status(201).json(newMessage);
   } catch (err) {
     console.log("Error", err);
@@ -53,10 +61,12 @@ exports.getAllConversations = async (req, res) => {
   try {
     const allConversations = await Conversations.find({
       members: userId,
-    }).populate({
-      path: "members",
-      select: "username name googlePicture profilePicture",
-    });
+    })
+      .populate({
+        path: "members",
+        select: "username name googlePicture profilePicture",
+      })
+      .sort({ updatedAt: -1 });
 
     // need to fix the send the same user.
     allConversations.forEach((conversation) => {
