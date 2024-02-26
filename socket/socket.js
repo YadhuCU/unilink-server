@@ -35,6 +35,11 @@ io.on("connection", (socket) => {
     io.emit("get-user-status", Object.keys(userSocketMap));
   });
 
+  socket.on("typing", (arg) => {
+    console.log("typ", userSocketMap[arg.receiverId]);
+    io.to(userSocketMap[arg.receiverId]).emit("typing", arg);
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected.", socket.id);
     delete userSocketMap[userId];
